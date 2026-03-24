@@ -8,20 +8,29 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
 
-      - name: Set up Node
+    steps:
+      # Step 1: Checkout the repo
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Step 2: Set up Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '20'
 
+      # Step 3: Install dependencies
       - name: Install dependencies
+        working-directory: groupcap
         run: npm ci
 
+      # Step 4: Build Angular app
       - name: Build Angular app
+        working-directory: groupcap
         run: ng build --configuration production
 
+      # Step 5: Configure AWS credentials
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
@@ -29,8 +38,10 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
-      - name: Sync to S3
-        run: aws s3 sync ./dist/groupcap-frontend s3://groupcap.co --delete
+      # Step 6: Deploy to S3
+      - name: Deploy to S3
+        run: aws s3 sync ./groupcap/dist/groupcap/browser s3://groupcap.co --delete
 
+      # Step 7: Invalidate CloudFront cache
       - name: Invalidate CloudFront cache
         run: aws cloudfront create-invalidation --distribution-id YOUR_DISTRIBUTION_ID --paths "/*"
