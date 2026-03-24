@@ -14,8 +14,8 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
-      # Step 2: Debug - see actual paths on the runner
-      - name: Show current path and files
+      # Step 2: Debug - confirm folder structure
+      - name: Show repo contents
         run: |
           pwd
           ls -R
@@ -26,14 +26,14 @@ jobs:
         with:
           node-version: '20'
 
-      # Step 4: Install dependencies in the Angular project
+      # Step 4: Install Angular dependencies
       - name: Install dependencies
-        working-directory: frontend-groupcap.co/groupcap
+        working-directory: groupcap
         run: npm ci
 
       # Step 5: Build Angular app
       - name: Build Angular app
-        working-directory: frontend-groupcap.co/groupcap
+        working-directory: groupcap
         run: ng build --configuration production
 
       # Step 6: Configure AWS credentials
@@ -44,10 +44,10 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
-      # Step 7: Deploy Angular build to S3
+      # Step 7: Deploy build to S3
       - name: Deploy to S3
-        run: aws s3 sync ./frontend-groupcap.co/groupcap/dist/groupcap/browser s3://groupcap.co --delete
+        run: aws s3 sync ./groupcap/dist/groupcap/browser s3://groupcap.co --delete
 
-      # Step 8: Invalidate CloudFront cache
+      # Step 8: Invalidate CloudFront
       - name: Invalidate CloudFront cache
         run: aws cloudfront create-invalidation --distribution-id YOUR_DISTRIBUTION_ID --paths "/*"
